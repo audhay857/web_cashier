@@ -66,19 +66,42 @@
             body { background: #f5f5f5; padding: 20px 0; }
             .struk { background: #fff; padding: 4mm 3mm; box-shadow: 0 2px 12px rgba(0,0,0,0.15); border-radius: 2px; }
         }
-        @media screen and (max-width: 400px) {
-            body { width: 100%; padding: 8px 0; }
-            .struk { width: 96%; padding: 3mm 2mm; }
-            .header-toko .nama-toko { font-size: 12pt; }
+        @media screen and (max-width: 500px) {
+            body { width: 100%; padding: 6px 0; }
+            .struk { width: 98%; padding: 2mm 1.5mm; }
+            .header-toko .nama-toko { font-size: 13pt; }
             .garis { font-size: 9pt; white-space: normal; overflow: hidden; }
             .tabel-belanja { font-size: 9pt; }
             .tabel-belanja .col-harga, .tabel-belanja .col-subtotal { width: 18mm; font-size: 9pt; }
-            .info-cetak { padding: 12px 8px; }
+            .info-cetak { padding: 10px 6px; }
+            .info-cetak p { font-size: 9pt; }
+            .info-cetak button { padding: 6px 18px; font-size: 10pt; }
+            .ringkasan { font-size: 9pt; }
+            .ringkasan .total-bayar { font-size: 11pt; }
+        }
+        @media screen and (max-width: 400px) {
+            body { width: 100%; padding: 8px 0; }
+            .struk { width: 96%; padding: 2mm 1.5mm; }
+            .header-toko .nama-toko { font-size: 11pt; }
+            .header-toko .alamat, .header-toko .telp { font-size: 8pt; }
+            .garis { font-size: 8pt; white-space: normal; overflow: hidden; }
+            .tabel-belanja { font-size: 8pt; }
+            .tabel-belanja .col-harga, .tabel-belanja .col-subtotal { width: 16mm; font-size: 8pt; }
+            .tabel-belanja .col-qty { width: 10mm; }
+            .info-cetak { padding: 8px 4px; }
+            .info-faktur { font-size: 9pt; }
+            .info-faktur table { font-size: 9pt; }
+            .ringkasan { font-size: 8pt; }
+            .ringkasan .total-bayar { font-size: 10pt; }
+            .footer .terima-kasih { font-size: 10pt; }
+            .footer .pesan { font-size: 8pt; }
         }
         @media screen and (max-width: 360px) {
-            .tabel-belanja .col-harga, .tabel-belanja .col-subtotal { width: 15mm; font-size: 8pt; }
-            .tabel-belanja .col-qty { width: 10mm; }
+            .tabel-belanja .col-harga, .tabel-belanja .col-subtotal { width: 14mm; font-size: 7pt; }
+            .tabel-belanja .col-qty { width: 8mm; font-size: 7pt; }
+            .tabel-belanja .col-nama { font-size: 7pt; }
             .ringkasan .label { width: auto; }
+            .struk { width: 100%; padding: 1.5mm 1mm; }
         }
     </style>
 </head>

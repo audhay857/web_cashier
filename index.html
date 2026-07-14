@@ -176,14 +176,55 @@
             transform: translate(-2px, -2px);
         }
 
-        .topbar-clock {
-            font-size: 12px;
-            font-weight: 600;
+        /* ========== TIME WIDGET ========== */
+        .time-widget {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1;
+            position: relative;
+            padding-left: 16px;
+            margin-left: 4px;
+        }
+
+        .time-widget::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 3px;
+            bottom: 3px;
+            width: 2px;
+            background: var(--border-light);
+            border-radius: 2px;
+        }
+
+        .time-widget .time-display {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0;
+            line-height: 1.1;
+        }
+
+        .time-widget .time-display .colon {
+            animation: blink-colon 1s step-end infinite;
+            margin: 0 1px;
+        }
+
+        @keyframes blink-colon {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.15; }
+        }
+
+        .time-widget .date-display {
+            font-size: 10px;
+            font-weight: 500;
             color: var(--text-secondary);
-            padding: 8px 14px;
-            background: var(--surface);
-            border: 2px solid var(--border);
-            box-shadow: var(--shadow-sm);
+            letter-spacing: 0.3px;
+            margin-top: 1px;
             white-space: nowrap;
         }
 
@@ -343,6 +384,67 @@
             50% { opacity: 0.5; transform: scale(0.8); }
         }
 
+        /* ========== ENTRANCE ANIMATIONS ========== */
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scale-in {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slide-right {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+        }
+
+        .anim-fade-up { animation: fade-up 0.6s ease forwards; opacity: 0; will-change: transform, opacity; }
+        .anim-fade-in { animation: fade-in 0.4s ease forwards; opacity: 0; will-change: opacity; }
+        .anim-scale-in { animation: scale-in 0.35s ease forwards; opacity: 0; will-change: transform, opacity; }
+        .anim-slide-right { animation: slide-right 0.5s ease forwards; opacity: 0; will-change: transform, opacity; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+            .skeleton { animation: none; }
+        }
+
+        .anim-d1 { animation-delay: 0.08s; }
+        .anim-d2 { animation-delay: 0.16s; }
+        .anim-d3 { animation-delay: 0.24s; }
+        .anim-d4 { animation-delay: 0.32s; }
+        .anim-d5 { animation-delay: 0.40s; }
+        .anim-d6 { animation-delay: 0.48s; }
+        .anim-d7 { animation-delay: 0.56s; }
+        .anim-d8 { animation-delay: 0.64s; }
+
+        /* ========== SKELETON LOADING ========== */
+        .skeleton {
+            background: linear-gradient(90deg, var(--border-light) 25%, var(--surface) 50%, var(--border-light) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        .skeleton-text { height: 14px; width: 80%; margin-bottom: 6px; }
+        .skeleton-text.short { width: 50%; }
+        .skeleton-text.long { width: 100%; }
+        .skeleton-block { height: 100px; width: 100%; }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 860px) {
             .stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -361,10 +463,14 @@
                 display: flex;
                 align-items: center;
             }
-            .topbar-clock {
-                padding: 10px 14px;
-                font-size: 13px;
-            }
+            .app-wrapper { padding: 16px; }
+            .topbar { gap: 10px; margin-bottom: 20px; }
+            .stats-row { gap: 12px; }
+            .menu-grid { gap: 12px; }
+            .stat-card { padding: 16px 20px; }
+            .menu-card { padding: 24px 20px; }
+            .time-widget .time-display { font-size: 20px; }
+            .time-widget .date-display { font-size: 9px; }
         }
 
         @media (max-width: 600px) {
@@ -373,7 +479,6 @@
             .topbar-right { width: 100%; }
             .stats-row { grid-template-columns: 1fr; gap: 12px; }
             .menu-grid { grid-template-columns: 1fr; gap: 12px; }
-            .topbar { gap: 8px; margin-bottom: 20px; }
             .stat-card { padding: 16px 18px; }
             .stat-card .stat-value { font-size: 24px; }
             .menu-card { padding: 22px 18px; }
@@ -384,28 +489,56 @@
             .app-wrapper { padding: 10px; }
             .topbar-brand .logo-mark { width: 36px; height: 36px; font-size: 18px; }
             .topbar-brand .sub { font-size: 10px; }
-            .topbar-right { gap: 6px; }
+            .topbar-right { gap: 4px; }
             .topbar-right .nav-link {
                 flex: 1;
                 text-align: center;
                 justify-content: center;
                 font-size: 12px;
                 padding: 10px 4px;
-                min-height: 40px;
-            }
-            .topbar-clock {
-                font-size: 11px;
-                padding: 8px 10px;
-                width: 100%;
-                text-align: center;
-                margin-top: 2px;
+                min-height: 44px;
+                letter-spacing: -0.2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                min-width: 0;
             }
             .stat-card { padding: 14px 14px; }
-            .stat-card .stat-value { font-size: 20px; }
+            .stat-card .stat-value { font-size: 22px; }
+            .stat-card .stat-icon { font-size: 18px; margin-bottom: 4px; }
+            .stat-card .stat-label { font-size: 10px; }
             .menu-card { padding: 18px 14px; }
             .menu-card .card-icon { font-size: 28px; }
             .menu-card .card-title { font-size: 16px; }
             .status-bar { padding: 12px; font-size: 11px; gap: 10px; flex-wrap: wrap; }
+            .topbar-right .btn-mode {
+                padding: 8px 10px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .app-wrapper { padding: 8px; }
+            .topbar-right { gap: 2px; }
+            .topbar-right .nav-link {
+                font-size: 10px;
+                padding: 8px 2px;
+                min-height: 44px;
+                letter-spacing: -0.3px;
+            }
+            .topbar-right .btn-mode {
+                padding: 6px 6px;
+                font-size: 13px;
+                min-width: 30px;
+            }
+            .time-widget { padding-left: 10px; margin-left: 2px; }
+            .time-widget::before { top: 2px; bottom: 2px; }
+            .time-widget .time-display { font-size: 16px; }
+            .time-widget .date-display { font-size: 8px; }
+            .stat-card .stat-value { font-size: 18px; }
+            .menu-card .card-title { font-size: 14px; }
+            .menu-card .card-desc { font-size: 11px; }
+            .status-bar { font-size: 10px; gap: 6px; padding: 10px; }
         }
     </style>
 </head>
@@ -420,6 +553,12 @@
             <div>
                 <div class="sub">Point of Sale System</div>
             </div>
+            <div class="time-widget" id="timeWidget">
+                <div class="time-display">
+                    <span id="timeH">00</span><span class="colon">:</span><span id="timeM">00</span>
+                </div>
+                <div class="date-display" id="timeDate">Memuat...</div>
+            </div>
         </div>
         <div class="topbar-right">
             <a href="index.html" class="nav-link active">Dashboard</a>
@@ -427,23 +566,22 @@
             <a href="laporan.html" class="nav-link">Laporan</a>
             <a href="data_produk.html" class="nav-link">Produk</a>
             <button class="btn-mode" id="themeToggle" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
-            <span class="topbar-clock" id="clock">—</span>
         </div>
     </header>
 
     <!-- STATS -->
     <div class="stats-row">
-        <div class="stat-card">
+        <div class="stat-card anim-fade-up anim-d1">
             <div class="stat-icon">📦</div>
             <div class="stat-value" id="totalProduk">0</div>
             <div class="stat-label">Total Produk</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card anim-fade-up anim-d2">
             <div class="stat-icon">📋</div>
             <div class="stat-value" id="totalTransaksi">0</div>
             <div class="stat-label">Transaksi Hari Ini</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card anim-fade-up anim-d3">
             <div class="stat-icon">💰</div>
             <div class="stat-value" id="totalPendapatan">Rp 0</div>
             <div class="stat-label">Pendapatan Hari Ini</div>
@@ -454,7 +592,7 @@
     <div class="menu-grid">
 
         <!-- Featured: Kasir -->
-        <a href="kasir.html" class="menu-card featured">
+        <a href="kasir.html" class="menu-card featured anim-fade-up anim-d4">
             <div class="card-icon">🛒</div>
             <div class="card-title">Buka Kasir</div>
             <div class="card-desc">Mulai transaksi baru. Pilih produk, atur jumlah, bayar, dan cetak struk dalam satu alur cepat.</div>
@@ -462,7 +600,7 @@
         </a>
 
         <!-- Laporan -->
-        <a href="laporan.html" class="menu-card accent-amber">
+        <a href="laporan.html" class="menu-card accent-amber anim-fade-up anim-d5">
             <div class="card-icon">📊</div>
             <div class="card-title">Laporan</div>
             <div class="card-desc">Riwayat penjualan, filter tanggal, dan ringkasan pendapatan.</div>
@@ -470,7 +608,7 @@
         </a>
 
         <!-- Produk -->
-        <a href="data_produk.html" class="menu-card accent-indigo">
+        <a href="data_produk.html" class="menu-card accent-indigo anim-fade-up anim-d6">
             <div class="card-icon">📦</div>
             <div class="card-title">Produk</div>
             <div class="card-desc">Tambah, edit, atau hapus produk dalam database.</div>
@@ -478,7 +616,7 @@
         </a>
 
         <!-- Settings (koneksi.php) -->
-        <a href="pengaturan.html" class="menu-card accent-green">
+        <a href="pengaturan.html" class="menu-card accent-green anim-fade-up anim-d7">
             <div class="card-icon">⚙️</div>
             <div class="card-title">Pengaturan</div>
             <div class="card-desc">Konfigurasi Firebase dan informasi sistem.</div>
@@ -486,16 +624,15 @@
         </a>
 
         <!-- Spacer bottom right -->
-        <div style="display:flex;align-items:center;justify-content:center;border:2px dashed #CBD5E1;padding:12px;font-size:11px;color:#94A3B8;font-weight:500;">
+        <div class="anim-fade-up anim-d8" style="display:flex;align-items:center;justify-content:center;border:2px dashed var(--border-light);padding:12px;font-size:11px;color:var(--text-secondary);font-weight:500;">
             🔥 Firebase Active
         </div>
     </div>
 
     <!-- STATUS -->
-    <div class="status-bar">
+    <div class="status-bar anim-fade-up anim-d8" style="animation-delay:0.7s;">
         <span class="status-dot"></span>
         <span id="statusText">Menghubungkan ke Firebase...</span>
-        <span>—</span>
         <span id="clockFull">—</span>
     </div>
 </div>
@@ -521,12 +658,40 @@ function toggleTheme() {
 })();
 
 // ==========================================================
+// ANIMATED NUMBER COUNTER
+// ==========================================================
+function animateNumber(el, target, suffix) {
+    const isRupiah = suffix === 'rp';
+    const duration = 800;
+    const start = performance.now();
+    
+    function update(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease-out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(target * eased);
+        
+        if (isRupiah) {
+            el.textContent = 'Rp ' + rupiah(current);
+        } else {
+            el.textContent = current;
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    requestAnimationFrame(update);
+}
+
+// ==========================================================
 // LOAD STATS
 // ==========================================================
 async function loadStats() {
     try {
         const produkSnap = await db.collection('produk').get();
-        document.getElementById('totalProduk').textContent = produkSnap.size;
+        animateNumber(document.getElementById('totalProduk'), produkSnap.size, '');
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -538,11 +703,11 @@ async function loadStats() {
             .where('tanggal', '<', firebase.firestore.Timestamp.fromDate(tomorrow))
             .get();
 
-        document.getElementById('totalTransaksi').textContent = transaksiSnap.size;
+        animateNumber(document.getElementById('totalTransaksi'), transaksiSnap.size, '');
 
         let total = 0;
         transaksiSnap.forEach(doc => { total += doc.data().total_bayar || 0; });
-        document.getElementById('totalPendapatan').textContent = 'Rp ' + rupiah(total);
+        setTimeout(() => animateNumber(document.getElementById('totalPendapatan'), total, 'rp'), 150);
 
         document.getElementById('statusText').textContent = '✅ Terhubung ke Firebase';
     } catch (error) {
@@ -552,16 +717,33 @@ async function loadStats() {
 }
 
 // ==========================================================
-// CLOCK
+// LIVE CLOCK — Digital Widget
 // ==========================================================
 function updateClock() {
     const n = new Date();
-    const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' };
-    document.getElementById('clock').textContent = n.toLocaleDateString('id-ID', opts);
-    document.getElementById('clockFull').textContent = n.toLocaleDateString('id-ID', opts);
+    const h = n.getHours().toString().padStart(2, '0');
+    const m = n.getMinutes().toString().padStart(2, '0');
+    
+    const hEl = document.getElementById('timeH');
+    const mEl = document.getElementById('timeM');
+    if (hEl) hEl.textContent = h;
+    if (mEl) mEl.textContent = m;
+
+    const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const dayName = days[n.getDay()];
+    const date = n.getDate();
+    const month = months[n.getMonth()];
+    const year = n.getFullYear();
+    
+    const dEl = document.getElementById('timeDate');
+    if (dEl) dEl.textContent = `${dayName}, ${date} ${month} ${year}`;
+    
+    const fEl = document.getElementById('clockFull');
+    if (fEl) fEl.textContent = `${dayName}, ${date} ${month} ${year} — ${h}:${m}`;
 }
 updateClock();
-setInterval(updateClock, 10000);
+setInterval(updateClock, 1000);
 
 document.addEventListener('DOMContentLoaded', loadStats);
 </script>

@@ -61,7 +61,70 @@
             background: var(--surface); box-shadow: var(--shadow-sm);
         }
         .btn-mode:hover { transform: translate(-2px, -2px); }
-        .topbar-clock { font-size: 11px; font-weight: 600; color: var(--text-secondary); padding: 6px 12px; background: var(--bg); border: 2px solid var(--border); box-shadow: var(--shadow-sm); white-space: nowrap; }
+        /* ========== TIME WIDGET ========== */
+        .time-widget {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1;
+            position: relative;
+            padding-left: 14px;
+            margin-left: 4px;
+        }
+        .time-widget::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 3px;
+            bottom: 3px;
+            width: 2px;
+            background: var(--border-light);
+            border-radius: 2px;
+        }
+        .time-widget .time-display {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            line-height: 1.1;
+        }
+        .time-widget .time-display .colon {
+            animation: blink-colon 1s step-end infinite;
+            margin: 0 1px;
+        }
+        @keyframes blink-colon {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.15; }
+        }
+
+        /* ========== ANIMATIONS ========== */
+        @keyframes fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scale-in { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .anim-fade-up { animation: fade-up 0.5s ease forwards; opacity: 0; will-change: transform, opacity; }
+        .anim-fade-in { animation: fade-in 0.3s ease forwards; opacity: 0; will-change: opacity; }
+        .anim-scale-in { animation: scale-in 0.3s ease forwards; opacity: 0; will-change: transform, opacity; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+        }
+        .anim-d1 { animation-delay: 0.08s; } .anim-d2 { animation-delay: 0.16s; }
+        .anim-d3 { animation-delay: 0.24s; } .anim-d4 { animation-delay: 0.32s; }
+        .anim-d5 { animation-delay: 0.40s; } .anim-d6 { animation-delay: 0.48s; }
+        .anim-d7 { animation-delay: 0.56s; } .anim-d8 { animation-delay: 0.64s; }
+        .skeleton { background: linear-gradient(90deg, var(--border-light) 25%, var(--surface) 50%, var(--border-light) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+
+        .time-widget .date-display {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+            margin-top: 1px;
+            white-space: nowrap;
+        }
 
         .app-main { max-width: 1400px; margin: 0 auto; padding: 20px; }
 
@@ -139,10 +202,16 @@
         .empty-state { text-align: center; padding: 50px 20px; color: var(--text-secondary); }
         .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
         .loading { text-align: center; padding: 40px; color: var(--text-secondary); font-weight: 500; }
+        .stats-grid .stat-card { animation: fade-up 0.5s ease forwards; opacity: 0; }
+        .stats-grid .stat-card:nth-child(1) { animation-delay: 0.08s; }
+        .stats-grid .stat-card:nth-child(2) { animation-delay: 0.16s; }
+        .stats-grid .stat-card:nth-child(3) { animation-delay: 0.24s; }
+        .stats-grid .stat-card:nth-child(4) { animation-delay: 0.32s; }
 
         /* MODAL EDIT */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-overlay.open { display: flex; }
+        .modal-overlay.open { display: flex; animation: fade-in 0.2s ease; }
+        .modal-overlay.open .modal-box { animation: scale-in 0.25s ease forwards; }
         .modal-box { background: var(--surface); border: 2px solid var(--border); box-shadow: var(--shadow); padding: 24px; width: 90%; max-width: 420px; }
         .modal-box h3 { font-size: 17px; margin-bottom: 16px; }
         .form-group { display: flex; flex-direction: column; gap: 4px; }
@@ -169,19 +238,20 @@
 
         @media (max-width: 992px) {
             th:nth-child(8), td:nth-child(8) { width: 100px; }
-            .aksi-group .btn-sm { width: 30px; height: 30px; font-size: 10px; }
-            .aksi-group { gap: 4px; }
+            .aksi-group .btn-sm { width: 34px; height: 34px; font-size: 12px; }
+            .aksi-group { gap: 6px; }
         }
         @media (max-width: 768px) {
-            .topbar { flex-direction: column; align-items: flex-start; }
+            .topbar { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px; }
             .topbar-right { width: 100%; justify-content: flex-start; }
             .app-main { padding: 12px; }
             .filter-form { flex-direction: column; }
             .filter-group input { width: 100%; }
             .detail-inner { padding-left: 12px; }
-            th:nth-child(8), td:nth-child(8) { width: 80px; }
-            .aksi-group .btn-sm { width: 26px; height: 26px; font-size: 9px; }
-            .aksi-group { gap: 3px; }
+            .aksi-group .btn-sm { min-height: 34px; width: 34px; padding: 0; justify-content: center; }
+            .aksi-group { gap: 4px; }
+            table { font-size: 12px; }
+            thead th, tbody td { padding: 8px 8px; }
         }
         @media (max-width: 640px) {
             .topbar-right .nav-link {
@@ -191,52 +261,97 @@
                 display: flex;
                 align-items: center;
             }
-            .topbar-clock {
-                padding: 10px 14px;
-                font-size: 13px;
-            }
             .btn { padding: 12px 18px; min-height: 44px; font-size: 13px; }
             .btn-sm { padding: 8px 14px; min-height: 38px; font-size: 12px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .stat-card { padding: 14px 16px; }
             .stat-card .stat-value { font-size: 20px; }
+            .topbar { gap: 10px; }
+            .app-main { padding: 14px; }
+            .time-widget .time-display { font-size: 17px; }
+            .time-widget .date-display { font-size: 9px; }
         }
         @media (max-width: 480px) {
             .topbar { padding: 10px 12px; gap: 6px; }
             .topbar-brand .logo-mark { width: 34px; height: 34px; font-size: 16px; }
             .topbar-brand h1 { font-size: 16px; }
-            .topbar-right { gap: 4px; }
+            .topbar-right { gap: 3px; }
             .topbar-right .nav-link {
                 flex: 1;
                 text-align: center;
                 justify-content: center;
                 font-size: 11px;
-                padding: 10px 4px;
-                min-height: 38px;
+                padding: 10px 3px;
+                min-height: 44px;
+                letter-spacing: -0.2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                min-width: 0;
             }
-            .topbar-clock {
-                font-size: 10px;
+            .topbar-right .btn-mode {
                 padding: 8px 8px;
-                width: 100%;
-                text-align: center;
+                font-size: 15px;
             }
             .stats-grid { grid-template-columns: 1fr; gap: 8px; }
             .app-main { padding: 8px; }
             .card-body { padding: 12px; }
-            .card-header { padding: 12px 14px; }
+            .card-header { padding: 12px 14px; font-size: 13px; }
             .stat-card { padding: 12px 14px; }
             .stat-card .stat-value { font-size: 18px; }
-            .aksi-group .btn-sm { width: 30px; height: 30px; font-size: 11px; }
-            .aksi-group { gap: 6px; }
+            .stat-card .stat-label { font-size: 9px; }
+            .aksi-group .btn-sm { width: 32px; height: 32px; font-size: 11px; }
+            .aksi-group { gap: 4px; }
+            table { font-size: 11px; }
+            thead th, tbody td { padding: 6px 6px; }
+            .table-wrap { margin: 0 -12px; padding: 0 12px; }
+            .filter-group input { font-size: 13px; padding: 8px 10px; }
+            .detail-inner { padding: 8px 8px 8px 8px; }
+            .detail-inner table { font-size: 11px; }
+            .badge-item-count { min-width: 20px; height: 20px; font-size: 9px; }
+            .faktur-link { font-size: 11px; }
+            .modal-box { padding: 16px; max-width: 95%; }
+            .modal-actions { flex-direction: column; }
+            .modal-actions .btn { width: 100%; justify-content: center; }
+        }
+        @media (max-width: 380px) {
+            .topbar { padding: 8px 8px; gap: 4px; }
+            .topbar-right .nav-link {
+                font-size: 10px;
+                padding: 8px 2px;
+                min-height: 44px;
+                letter-spacing: -0.3px;
+            }
+            .topbar-right .btn-mode {
+                padding: 6px 6px;
+                font-size: 13px;
+                min-width: 30px;
+            }
+            .time-widget { padding-left: 8px; margin-left: 2px; }
+            .time-widget::before { top: 2px; bottom: 2px; }
+            .time-widget .time-display { font-size: 14px; }
+            .time-widget .date-display { font-size: 8px; }
+            .stats-grid { gap: 6px; }
+            .stat-card { padding: 10px 12px; }
+            .stat-card .stat-value { font-size: 16px; }
+            .btn { padding: 10px 14px; font-size: 12px; min-height: 40px; }
+            .btn-sm { min-height: 34px; font-size: 11px; }
+            table { font-size: 10px; }
+            thead th, tbody td { padding: 5px 4px; }
         }
     </style>
 </head>
 <body>
 
-<header class="topbar">
-    <div class="topbar-brand">
+<header class="topbar">        <div class="topbar-brand">
         <div class="logo-mark">📊</div>
         <div><h1>LAPORAN</h1></div>
+        <div class="time-widget" id="timeWidget">
+            <div class="time-display">
+                <span id="timeH">00</span><span class="colon">:</span><span id="timeM">00</span>
+            </div>
+            <div class="date-display" id="timeDate">Memuat...</div>
+        </div>
     </div>
     <div class="topbar-right">
         <a href="index.html" class="nav-link">Dashboard</a>
@@ -245,7 +360,6 @@
         <a href="data_produk.html" class="nav-link">Produk</a>
         <a href="pengaturan.html" class="nav-link">Pengaturan</a>
         <button class="btn-mode" id="themeToggle" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
-        <span class="topbar-clock" id="clock">—</span>
     </div>
 </header>
 
@@ -722,8 +836,27 @@ document.getElementById('modalEdit').addEventListener('click', function(e) {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });
 
-function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); }
-updateClock(); setInterval(updateClock, 10000);
+function updateClock() {
+    const n = new Date();
+    const h = n.getHours().toString().padStart(2, '0');
+    const m = n.getMinutes().toString().padStart(2, '0');
+    
+    const hEl = document.getElementById('timeH');
+    const mEl = document.getElementById('timeM');
+    if (hEl) hEl.textContent = h;
+    if (mEl) mEl.textContent = m;
+
+    const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const dayName = days[n.getDay()];
+    const date = n.getDate();
+    const month = months[n.getMonth()];
+    const year = n.getFullYear();
+    
+    const dEl = document.getElementById('timeDate');
+    if (dEl) dEl.textContent = `${dayName}, ${date} ${month} ${year}`;
+}
+updateClock(); setInterval(updateClock, 1000);
 document.addEventListener('DOMContentLoaded', setHariIni);
 </script>
 </body>
