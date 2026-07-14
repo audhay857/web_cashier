@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <style>
+        /* ==========================================================
+           DESIGN SYSTEM
+           Gaya: Neobrutalism + Warm Minimalism
+           ========================================================== */
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #F5F3F0;
+            --surface: #FFFFFF;
+            --text: #1E293B;
+            --text-secondary: #64748B;
+            --accent: #F59E0B;
+            --accent-hover: #D97706;
+            --secondary: #6366F1;
+            --success: #10B981;
+            --danger: #EF4444;
+            --border: #1E293B;
+            --shadow: 6px 6px 0px #1E293B;
+            --shadow-sm: 3px 3px 0px #1E293B;
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
+            --hover-bg: #FFF8E7;
+            --row-hover: #FFF8E7;
+            --border-light: #E2E8F0;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --accent: #FBBF24;
+            --accent-hover: #F59E0B;
+            --secondary: #818CF8;
+            --success: #34D399;
+            --danger: #F87171;
+            --border: #334155;
+            --shadow: 6px 6px 0px #020617;
+            --shadow-sm: 3px 3px 0px #020617;
+            --hover-bg: #1E293B;
+            --row-hover: #1E293B;
+            --border-light: #334155;
+        }
+
+        [data-theme="dark"] .menu-card.featured {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            border-color: #334155;
+            color: #F1F5F9;
+        }
+        [data-theme="dark"] .menu-card.featured .card-desc { color: #94A3B8; }
+
+        html { font-size: 16px; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* ========== LAYOUT ========== */
+        .app-wrapper {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* ========== TOP BAR ========== */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .topbar-brand .logo-mark {
+            width: 44px;
+            height: 44px;
+            background: var(--accent);
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .topbar-brand h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        .topbar-brand .sub {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-right .nav-link {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 2px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .topbar-right .nav-link:hover {
+            color: var(--text);
+            border-color: var(--border);
+            background: var(--surface);
+        }
+
+        .topbar-right .nav-link.active {
+            color: var(--text);
+            background: var(--surface);
+            border-color: var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-mode {
+            background: none;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            padding: 8px 10px;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-mode:hover {
+            transform: translate(-2px, -2px);
+        }
+
+        .topbar-clock {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            white-space: nowrap;
+        }
+
+        /* ========== STATS ROW ========== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 20px 24px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .stat-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px var(--border);
+        }
+
+        .stat-card .stat-icon { font-size: 20px; margin-bottom: 6px; }
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .stat-card .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        /* ========== MENU GRID (BENTO BOX) ========== */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .menu-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 28px 24px;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-card:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0px var(--border);
+        }
+
+        .menu-card:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--border);
+        }
+
+        .menu-card .card-icon { font-size: 36px; margin-bottom: 10px; line-height: 1; }
+        .menu-card .card-title {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            margin-bottom: 4px;
+        }
+        .menu-card .card-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .menu-card .card-arrow {
+            font-size: 20px;
+            margin-top: 12px;
+            transition: transform 0.2s ease;
+        }
+
+        .menu-card:hover .card-arrow {
+            transform: translateX(6px);
+        }
+
+        /* Featured card — Kasir (large) */
+        .menu-card.featured {
+            grid-row: span 2;
+            background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+            color: #fff;
+            border-color: #1E293B;
+            box-shadow: 6px 6px 0px #0F172A;
+        }
+
+        .menu-card.featured .card-desc {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .menu-card.featured .card-arrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-card.featured:hover {
+            box-shadow: 9px 9px 0px #0F172A;
+        }
+
+        /* Accent color cards */
+        .menu-card.accent-amber { border-left: 6px solid var(--accent); }
+        .menu-card.accent-indigo { border-left: 6px solid var(--secondary); }
+        .menu-card.accent-green { border-left: 6px solid var(--success); }
+
+        /* ========== STATUS BAR ========== */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 16px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            display: inline-block;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 860px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .menu-grid {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto;
+            }
+            .menu-card.featured { grid-row: span 1; }
+        }
+
+        @media (max-width: 640px) {
+            .topbar-right .nav-link {
+                padding: 10px 16px;
+                font-size: 14px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+            .topbar-clock {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .app-wrapper { padding: 14px; }
+            .topbar { flex-direction: column; align-items: flex-start; }
+            .topbar-right { width: 100%; }
+            .stats-row { grid-template-columns: 1fr; gap: 12px; }
+            .menu-grid { grid-template-columns: 1fr; gap: 12px; }
+            .topbar { gap: 8px; margin-bottom: 20px; }
+            .stat-card { padding: 16px 18px; }
+            .stat-card .stat-value { font-size: 24px; }
+            .menu-card { padding: 22px 18px; }
+            .menu-card .card-desc { font-size: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .app-wrapper { padding: 10px; }
+            .topbar-brand .logo-mark { width: 36px; height: 36px; font-size: 18px; }
+            .topbar-brand .sub { font-size: 10px; }
+            .topbar-right { gap: 6px; }
+            .topbar-right .nav-link {
+                flex: 1;
+                text-align: center;
+                justify-content: center;
+                font-size: 12px;
+                padding: 10px 4px;
+                min-height: 40px;
+            }
+            .topbar-clock {
+                font-size: 11px;
+                padding: 8px 10px;
+                width: 100%;
+                text-align: center;
+                margin-top: 2px;
+            }
+            .stat-card { padding: 14px 14px; }
+            .stat-card .stat-value { font-size: 20px; }
+            .menu-card { padding: 18px 14px; }
+            .menu-card .card-icon { font-size: 28px; }
+            .menu-card .card-title { font-size: 16px; }
+            .status-bar { padding: 12px; font-size: 11px; gap: 10px; flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="topbar-brand">
+            <div class="logo-mark">🏪</div>
+            <div>
+                <div class="sub">Point of Sale System</div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <a href="index.html" class="nav-link active">Dashboard</a>
+            <a href="kasir.html" class="nav-link">Kasir</a>
+            <a href="laporan.html" class="nav-link">Laporan</a>
+            <a href="data_produk.html" class="nav-link">Produk</a>
+            <button class="btn-mode" id="themeToggle" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
+            <span class="topbar-clock" id="clock">—</span>
+        </div>
+    </header>
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value" id="totalProduk">0</div>
+            <div class="stat-label">Total Produk</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value" id="totalTransaksi">0</div>
+            <div class="stat-label">Transaksi Hari Ini</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value" id="totalPendapatan">Rp 0</div>
+            <div class="stat-label">Pendapatan Hari Ini</div>
+        </div>
+    </div>
+
+    <!-- MENU GRID (BENTO BOX) -->
+    <div class="menu-grid">
+
+        <!-- Featured: Kasir -->
+        <a href="kasir.html" class="menu-card featured">
+            <div class="card-icon">🛒</div>
+            <div class="card-title">Buka Kasir</div>
+            <div class="card-desc">Mulai transaksi baru. Pilih produk, atur jumlah, bayar, dan cetak struk dalam satu alur cepat.</div>
+            <div class="card-arrow">→ Mulai Transaksi</div>
+        </a>
+
+        <!-- Laporan -->
+        <a href="laporan.html" class="menu-card accent-amber">
+            <div class="card-icon">📊</div>
+            <div class="card-title">Laporan</div>
+            <div class="card-desc">Riwayat penjualan, filter tanggal, dan ringkasan pendapatan.</div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <!-- Produk -->
+        <a href="data_produk.html" class="menu-card accent-indigo">
+            <div class="card-icon">📦</div>
+            <div class="card-title">Produk</div>
+            <div class="card-desc">Tambah, edit, atau hapus produk dalam database.</div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <!-- Settings (koneksi.php) -->
+        <a href="pengaturan.html" class="menu-card accent-green">
+            <div class="card-icon">⚙️</div>
+            <div class="card-title">Pengaturan</div>
+            <div class="card-desc">Konfigurasi Firebase dan informasi sistem.</div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <!-- Spacer bottom right -->
+        <div style="display:flex;align-items:center;justify-content:center;border:2px dashed #CBD5E1;padding:12px;font-size:11px;color:#94A3B8;font-weight:500;">
+            🔥 Firebase Active
+        </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status-bar">
+        <span class="status-dot"></span>
+        <span id="statusText">Menghubungkan ke Firebase...</span>
+        <span>—</span>
+        <span id="clockFull">—</span>
+    </div>
+</div>
+
+<script>
+// ==========================================================
+// DARK MODE
+// ==========================================================
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.getElementById('themeToggle').textContent = isDark ? '🌙' : '☀️';
+}
+
+(function initTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeToggle').textContent = '☀️';
+    }
+})();
+
+// ==========================================================
+// LOAD STATS
+// ==========================================================
+async function loadStats() {
+    try {
+        const produkSnap = await db.collection('produk').get();
+        document.getElementById('totalProduk').textContent = produkSnap.size;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const transaksiSnap = await db.collection('transaksi')
+            .where('tanggal', '>=', firebase.firestore.Timestamp.fromDate(today))
+            .where('tanggal', '<', firebase.firestore.Timestamp.fromDate(tomorrow))
+            .get();
+
+        document.getElementById('totalTransaksi').textContent = transaksiSnap.size;
+
+        let total = 0;
+        transaksiSnap.forEach(doc => { total += doc.data().total_bayar || 0; });
+        document.getElementById('totalPendapatan').textContent = 'Rp ' + rupiah(total);
+
+        document.getElementById('statusText').textContent = '✅ Terhubung ke Firebase';
+    } catch (error) {
+        console.error(error);
+        document.getElementById('statusText').textContent = '❌ Gagal: ' + error.message;
+    }
+}
+
+// ==========================================================
+// CLOCK
+// ==========================================================
+function updateClock() {
+    const n = new Date();
+    const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' };
+    document.getElementById('clock').textContent = n.toLocaleDateString('id-ID', opts);
+    document.getElementById('clockFull').textContent = n.toLocaleDateString('id-ID', opts);
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+document.addEventListener('DOMContentLoaded', loadStats);
+</script>
+</body>
+</html>

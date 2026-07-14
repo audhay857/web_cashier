@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #F5F3F0; --surface: #FFFFFF; --text: #1E293B; --text-secondary: #64748B;
+            --accent: #F59E0B; --accent-hover: #D97706; --secondary: #6366F1; --success: #10B981; --danger: #EF4444;
+            --border: #1E293B; --shadow: 6px 6px 0px #1E293B; --shadow-sm: 3px 3px 0px #1E293B;
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
+            --border-light: #E2E8F0; --row-hover: #FFF8E7;
+            --notif-bg-success: #ECFDF5; --notif-color-success: #065F46;
+            --notif-bg-error: #FEF2F2; --notif-color-error: #991B1B;
+        }
+        [data-theme="dark"] {
+            --bg: #0F172A; --surface: #1E293B; --text: #F1F5F9; --text-secondary: #94A3B8;
+            --accent: #FBBF24; --accent-hover: #F59E0B; --secondary: #818CF8; --success: #34D399; --danger: #F87171;
+            --border: #334155; --shadow: 6px 6px 0px #020617; --shadow-sm: 3px 3px 0px #020617;
+            --border-light: #334155; --row-hover: #1E293B;
+            --notif-bg-success: #064E3B; --notif-color-success: #6EE7B7;
+            --notif-bg-error: #7F1D1D; --notif-color-error: #FCA5A5;
+        }
+
+        body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; transition: background 0.3s ease, color 0.3s ease; }
+
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; background: var(--surface);
+            border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 100;
+            flex-wrap: wrap; gap: 12px;
+        }
+        .topbar-brand { display: flex; align-items: center; gap: 12px; }
+        .topbar-brand .logo-mark { width: 40px; height: 40px; background: var(--success); border: 2px solid var(--border); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .topbar-brand h1 { font-size: 18px; font-weight: 800; }
+        .topbar-brand .sub { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+        .topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .topbar-right .nav-link { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; padding: 6px 14px; border: 2px solid transparent; transition: all 0.15s ease; }
+        .topbar-right .nav-link:hover { color: var(--text); border-color: var(--border); background: var(--bg); }
+        .topbar-right .nav-link.active { color: var(--text); background: var(--bg); border-color: var(--border); box-shadow: var(--shadow-sm); }
+        .btn-mode {
+            background: none; border: 2px solid var(--border); cursor: pointer;
+            padding: 6px 8px; font-size: 14px; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease;
+            background: var(--surface); box-shadow: var(--shadow-sm);
+        }
+        .btn-mode:hover { transform: translate(-2px, -2px); }
+        .topbar-clock { font-size: 11px; font-weight: 600; color: var(--text-secondary); padding: 6px 12px; background: var(--bg); border: 2px solid var(--border); box-shadow: var(--shadow-sm); white-space: nowrap; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        /* ========== TABS ========== */
+        .tab-bar {
+            display: flex; gap: 4px; margin-bottom: 20px;
+            background: var(--surface); border: 2px solid var(--border);
+            box-shadow: var(--shadow); padding: 4px;
+        }
+        .tab-btn {
+            flex: 1; padding: 12px 16px; border: 2px solid transparent;
+            background: transparent; cursor: pointer;
+            font-size: 13px; font-weight: 700; font-family: var(--font);
+            color: var(--text-secondary); transition: all 0.15s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .tab-btn:hover { color: var(--text); background: var(--bg); border-color: var(--border); }
+        .tab-btn.active { color: var(--text); background: var(--bg); border-color: var(--border); box-shadow: var(--shadow-sm); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ========== CARD ========== */
+        .card { background: var(--surface); border: 2px solid var(--border); box-shadow: var(--shadow); margin-bottom: 20px; }
+        .card-header { padding: 14px 18px; font-weight: 700; font-size: 14px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 18px; }
+
+        /* ========== FORM ========== */
+        .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+        .form-group label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
+        .form-group input, .form-group select {
+            padding: 10px 12px; border: 2px solid var(--border);
+            font-size: 14px; font-family: var(--font); outline: none;
+            background: var(--surface); color: var(--text);
+            transition: box-shadow 0.15s ease;
+        }
+        .form-group input:focus, .form-group select:focus { box-shadow: 3px 3px 0px var(--border); }
+
+        .form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+        .form-row .form-group { flex: 1; min-width: 140px; }
+
+        .btn {
+            padding: 10px 20px; border: 2px solid var(--border); font-size: 12px; font-weight: 700;
+            cursor: pointer; font-family: var(--font); display: inline-flex; align-items: center;
+            gap: 6px; white-space: nowrap; transition: all 0.12s ease;
+        }
+        .btn-primary { background: var(--border); color: #fff; }
+        .btn-primary:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--border); }
+        .btn-success:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--border); }
+        .btn-danger:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-warning { background: var(--accent); color: var(--text); border-color: var(--border); }
+        .btn-warning:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-secondary { background: var(--bg); color: var(--text); }
+        .btn-secondary:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-sm { padding: 6px 14px; font-size: 11px; }
+
+        .aksi-group { display: inline-flex; gap: 6px; align-items: center; }
+
+        /* ========== TABLE ========== */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead th { background: var(--bg); padding: 10px 12px; text-align: left; font-weight: 700; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid var(--border); }
+        tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+        tbody tr:hover td { background: var(--row-hover); }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        /* ========== NOTIF ========== */
+        .notif { padding: 12px 16px; font-size: 13px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; border: 2px solid var(--border); }
+        .notif.success { background: var(--notif-bg-success); border-color: var(--success); color: var(--notif-color-success); }
+        .notif.error { background: var(--notif-bg-error); border-color: var(--danger); color: var(--notif-color-error); }
+
+        .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
+        .empty-state .icon { font-size: 40px; margin-bottom: 6px; }
+
+        /* ========== KATEGORI BADGE ========== */
+        .kategori-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 10px; font-size: 11px; font-weight: 700;
+            border: 2px solid var(--border); margin: 3px;
+        }
+        .kategori-badge .color-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            border: 1px solid var(--border); display: inline-block;
+        }
+
+        /* ========== KATEGORI ICON PICKER ========== */
+        .icon-grid {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;
+        }
+        .icon-option {
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--border); cursor: pointer;
+            font-size: 20px; transition: all 0.12s ease;
+            background: var(--surface);
+        }
+        .icon-option:hover { transform: translate(-1px, -1px); box-shadow: 2px 2px 0px var(--border); }
+        .icon-option.active { background: var(--border); box-shadow: 2px 2px 0px var(--border); }
+
+        .color-options {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;
+        }
+        .color-opt {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 3px solid transparent; cursor: pointer;
+            transition: all 0.12s ease;
+        }
+        .color-opt:hover { transform: scale(1.15); }
+        .color-opt.active { border-color: var(--border); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--border); }
+
+        /* ========== MODAL ========== */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: var(--surface); border: 2px solid var(--border); box-shadow: var(--shadow); padding: 24px; width: 90%; max-width: 440px; }
+        .modal-box h3 { font-size: 17px; margin-bottom: 16px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+
+        /* ========== SISTEM INFO ========== */
+        .info-row { display: flex; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+        .info-row .info-label { width: 180px; flex-shrink: 0; font-weight: 700; font-size: 12px; color: var(--text-secondary); }
+        .info-row .info-value { font-size: 13px; word-break: break-all; }
+        .status-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            display: inline-block; margin-right: 6px;
+        }
+        .status-dot.online { background: var(--success); }
+        .status-dot.offline { background: var(--danger); }
+
+        .theme-preview {
+            display: flex; gap: 12px; margin-top: 12px;
+        }
+        .theme-card {
+            flex: 1; padding: 20px; border: 2px solid var(--border);
+            cursor: pointer; text-align: center; transition: all 0.12s ease;
+            font-weight: 700; font-size: 13px;
+        }
+        .theme-card:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .theme-card.active { box-shadow: 3px 3px 0px var(--border); background: var(--row-hover); }
+        .theme-card.light-card { background: #FFFFFF; color: #1E293B; }
+        .theme-card.dark-card { background: #0F172A; color: #F1F5F9; border-color: #334155; }
+
+        @media (max-width: 768px) {
+            .topbar { flex-direction: column; align-items: flex-start; padding: 12px 16px; }
+            .topbar-right { width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 4px; }
+            .container { padding: 12px; }
+            .tab-btn { font-size: 11px; padding: 10px 8px; }
+            .form-row { flex-direction: column; }
+            .form-row .form-group { min-width: 100%; }
+            .info-row { flex-direction: column; gap: 2px; }
+            .info-row .info-label { width: 100%; }
+            .theme-preview { flex-direction: column; }
+        }
+        @media (max-width: 640px) {
+            .topbar-right .nav-link {
+                padding: 10px 16px;
+                font-size: 14px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+            .topbar-clock { padding: 10px 14px; font-size: 13px; }
+        }
+        @media (max-width: 480px) {
+            .topbar { padding: 10px 12px; gap: 6px; }
+            .topbar-brand .logo-mark { width: 34px; height: 34px; font-size: 16px; }
+            .topbar-brand h1 { font-size: 16px; }
+            .topbar-right { gap: 4px; }
+            .topbar-right .nav-link {
+                flex: 1; text-align: center; justify-content: center;
+                font-size: 11px; padding: 10px 4px; min-height: 38px;
+            }
+            .topbar-clock { font-size: 10px; padding: 8px 8px; width: 100%; text-align: center; }
+            .container { padding: 8px; }
+            .card-body { padding: 12px; }
+            .modal-box { padding: 16px; }
+            .modal-actions { flex-direction: column; }
+            .modal-actions .btn { width: 100%; justify-content: center; }
+            .btn { min-height: 44px; }
+            .tab-btn { font-size: 10px; padding: 8px 4px; gap: 4px; }
+            .tab-btn .tab-icon { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-brand">
+        <div class="logo-mark">⚙️</div>
+        <div><h1>PENGATURAN</h1></div>
+    </div>
+    <div class="topbar-right">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="kasir.html" class="nav-link">Kasir</a>
+        <a href="laporan.html" class="nav-link">Laporan</a>
+        <a href="data_produk.html" class="nav-link">Produk</a>
+        <a href="pengaturan.html" class="nav-link active">Pengaturan</a>
+        <button class="btn-mode" id="themeToggle" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
+        <span class="topbar-clock" id="clock">—</span>
+    </div>
+</header>
+
+<div class="container">
+
+    <div id="notifContainer"></div>
+
+    <!-- TABS -->
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('kategori', this)">
+            <span class="tab-icon">📂</span> Kategori
+        </button>
+        <button class="tab-btn" onclick="switchTab('toko', this)">
+            <span class="tab-icon">🏪</span> Toko
+        </button>
+        <button class="tab-btn" onclick="switchTab('sistem', this)">
+            <span class="tab-icon">🖥️</span> Sistem
+        </button>
+    </div>
+
+    <!-- ==================== TAB: KATEGORI ==================== -->
+    <div class="tab-content active" id="tab-kategori">
+
+        <div class="card">
+            <div class="card-header">➕ Tambah Kategori Baru</div>
+            <div class="card-body">
+                <form onsubmit="return tambahKategori(event)" class="form-row">
+                    <div class="form-group" style="flex:2;min-width:180px;">
+                        <label>Nama Kategori</label>
+                        <input type="text" id="inputNamaKategori" placeholder="Contoh: Makanan, Minuman..." required>
+                    </div>
+                    <div class="form-group" style="min-width:120px;">
+                        <label>Ikon</label>
+                        <select id="inputIconKategori">
+                            <option value="📦">📦 Lainnya</option>
+                            <option value="👕">👕 Baju</option>
+                            <option value="👖">👖 Celana</option>
+                            <option value="🧢">🧢 Aksesoris</option>
+                            <option value="🍕">🍕 Makanan</option>
+                            <option value="🥤">🥤 Minuman</option>
+                            <option value="📱">📱 Elektronik</option>
+                            <option value="📚">📚 Buku</option>
+                            <option value="🪥">🪥 Kesehatan</option>
+                            <option value="🏠">🏠 Rumah Tangga</option>
+                            <option value="⚽">⚽ Olahraga</option>
+                            <option value="🎮">🎮 Game</option>
+                            <option value="🎵">🎵 Musik</option>
+                            <option value="💄">💄 Kecantikan</option>
+                            <option value="🔧">🔧 Perkakas</option>
+                            <option value="🌿">🌿 Herbal</option>
+                            <option value="🧸">🧸 Mainan</option>
+                            <option value="👟">👟 Sepatu</option>
+                            <option value="👜">👜 Tas</option>
+                            <option value="⌚">⌚ Jam Tangan</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="min-width:120px;">
+                        <label>Warna</label>
+                        <select id="inputWarnaKategori">
+                            <option value="#0369A1">🔵 Biru</option>
+                            <option value="#92400E">🟤 Coklat</option>
+                            <option value="#6D28D9">🟣 Ungu</option>
+                            <option value="#059669">🟢 Hijau</option>
+                            <option value="#DC2626">🔴 Merah</option>
+                            <option value="#D97706">🟠 Orange</option>
+                            <option value="#DB2777">🩷 Pink</option>
+                            <option value="#0891B2">🩵 Cyan</option>
+                            <option value="#4F46E5">🟦 Indigo</option>
+                            <option value="#78716C">⬜ Abu-abu</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:0 0 auto;">
+                        <button type="submit" class="btn btn-success" style="margin-top:16px;">➕ Tambah</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span>📂 Daftar Kategori</span>
+                <span style="font-size:12px;color:var(--text-secondary);font-weight:400;" id="countKategori">0 kategori</span>
+            </div>
+            <div class="card-body">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">No</th>
+                                <th style="width:60px;">Ikon</th>
+                                <th>Nama Kategori</th>
+                                <th style="width:80px;">Warna</th>
+                                <th class="text-center" style="width:80px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kategoriTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="emptyKategori">
+                    <div class="icon">📭</div>
+                    <p>Belum ada kategori.</p>
+                    <p style="font-size:12px;color:var(--text-secondary);">Tambah kategori melalui form di atas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TAB: TOKO ==================== -->
+    <div class="tab-content" id="tab-toko">
+        <div class="card">
+            <div class="card-header">🏪 Info Toko</div>
+            <div class="card-body">
+                <form onsubmit="return simpanToko(event)">
+                    <div class="form-group">
+                        <label>Nama Toko</label>
+                        <input type="text" id="inputNamaToko" placeholder="Cth: Toko Maju Jaya" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat</label>
+                        <input type="text" id="inputAlamatToko" placeholder="Cth: Jl. Merdeka No. 123, Jakarta">
+                    </div>
+                    <div class="form-group">
+                        <label>Telepon</label>
+                        <input type="text" id="inputTelpToko" placeholder="Cth: (021) 1234-5678">
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:4px;">
+                        <button type="submit" class="btn btn-primary">💾 Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">🎨 Tampilan</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Tema</label>
+                    <div class="theme-preview">
+                        <div class="theme-card light-card" data-theme="light" onclick="pilihTema('light', this)">
+                            ☀️ Terang
+                        </div>
+                        <div class="theme-card dark-card" data-theme="dark" onclick="pilihTema('dark', this)">
+                            🌙 Gelap
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TAB: SISTEM ==================== -->
+    <div class="tab-content" id="tab-sistem">
+        <div class="card">
+            <div class="card-header">🖥️ Informasi Sistem</div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">🔥 Firebase</span>
+                    <span class="info-value" id="firebaseStatus">
+                        <span class="status-dot" id="firebaseDot"></span>
+                        <span id="firebaseText">Memeriksa koneksi...</span>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Project ID</span>
+                    <span class="info-value" id="projectId">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Database</span>
+                    <span class="info-value" id="dbUrl">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Aplikasi</span>
+                    <span class="info-value">POS Kasir v2.0 — Firebase Firestore</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Browser</span>
+                    <span class="info-value" id="browserInfo">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Waktu Server</span>
+                    <span class="info-value" id="serverTime">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">🗄️ Inisialisasi Data Awal</div>
+            <div class="card-body">
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+                    Jika database masih kosong, Anda bisa menambahkan data awal (kategori default dan contoh produk).
+                </p>
+                <button class="btn btn-warning" onclick="seedDefaultData()">🌱 Seed Data Default</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">📄 Tentang</div>
+            <div class="card-body">
+                <p style="font-size:13px;color:var(--text-secondary);">
+                    <strong>POS Kasir</strong> — Aplikasi Point of Sale berbasis web dengan Firebase Firestore.<br><br>
+                    Dibangun dengan ❤️ menggunakan teknologi modern tanpa backend server.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Kategori -->
+<div class="modal-overlay" id="modalEditKategori">
+    <div class="modal-box">
+        <h3>✏️ Edit Kategori</h3>
+        <form onsubmit="return simpanEditKategori(event)">
+            <input type="hidden" id="editKategoriId">
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Nama Kategori</label>
+                <input type="text" id="editNamaKategori" required>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Ikon</label>
+                <select id="editIconKategori">
+                    <option value="📦">📦 Lainnya</option>
+                    <option value="👕">👕 Baju</option>
+                    <option value="👖">👖 Celana</option>
+                    <option value="🧢">🧢 Aksesoris</option>
+                    <option value="🍕">🍕 Makanan</option>
+                    <option value="🥤">🥤 Minuman</option>
+                    <option value="📱">📱 Elektronik</option>
+                    <option value="📚">📚 Buku</option>
+                    <option value="🪥">🪥 Kesehatan</option>
+                    <option value="🏠">🏠 Rumah Tangga</option>
+                    <option value="⚽">⚽ Olahraga</option>
+                    <option value="🎮">🎮 Game</option>
+                    <option value="🎵">🎵 Musik</option>
+                    <option value="💄">💄 Kecantikan</option>
+                    <option value="🔧">🔧 Perkakas</option>
+                    <option value="🌿">🌿 Herbal</option>
+                    <option value="🧸">🧸 Mainan</option>
+                    <option value="👟">👟 Sepatu</option>
+                    <option value="👜">👜 Tas</option>
+                    <option value="⌚">⌚ Jam Tangan</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Warna</label>
+                <select id="editWarnaKategori">
+                    <option value="#0369A1">🔵 Biru</option>
+                    <option value="#92400E">🟤 Coklat</option>
+                    <option value="#6D28D9">🟣 Ungu</option>
+                    <option value="#059669">🟢 Hijau</option>
+                    <option value="#DC2626">🔴 Merah</option>
+                    <option value="#D97706">🟠 Orange</option>
+                    <option value="#DB2777">🩷 Pink</option>
+                    <option value="#0891B2">🩵 Cyan</option>
+                    <option value="#4F46E5">🟦 Indigo</option>
+                    <option value="#78716C">⬜ Abu-abu</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEditKategori()">Batal</button>
+                <button type="submit" class="btn btn-primary">💾 Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay" id="confirmDialog">
+    <div class="modal-box" style="text-align:center;max-width:360px;">
+        <div style="font-size:36px;margin-bottom:8px;">⚠️</div>
+        <div class="confirm-msg" style="font-size:14px;font-weight:600;margin-bottom:4px;" id="confirmMsg">Yakin ingin melanjutkan?</div>
+        <div class="confirm-sub" style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;" id="confirmSub">Tindakan ini tidak bisa dibatalkan.</div>
+        <div class="modal-actions" style="justify-content:center;">
+            <button class="btn btn-secondary" onclick="closeConfirm()">Batal</button>
+            <button class="btn btn-danger" id="confirmBtn">🗑 Ya, Lanjutkan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==========================================================
+// STATE
+// ==========================================================
+let kategoriData = [];
+let tokoData = null;
+let confirmCallback = null;
+
+// ==========================================================
+// NOTIF
+// ==========================================================
+function showNotif(type, msg) {
+    const c = document.getElementById('notifContainer');
+    const div = document.createElement('div');
+    div.className = 'notif ' + type;
+    div.innerHTML = '<span>' + (type === 'success' ? '✅' : '⚠️') + '</span> ' + msg;
+    c.appendChild(div);
+    setTimeout(() => div.remove(), 4000);
+}
+
+// ==========================================================
+// TAB SWITCHING
+// ==========================================================
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ==========================================================
+// LOAD KATEGORI
+// ==========================================================
+async function loadKategori() {
+    try {
+        const snap = await db.collection('kategori').orderBy('urutan', 'asc').get();
+        kategoriData = [];
+        snap.forEach(doc => kategoriData.push({ id: doc.id, ...doc.data() }));
+        renderKategori();
+    } catch (error) {
+        console.error('Gagal load kategori:', error);
+        // Fallback: jika error karena index, coba tanpa orderBy
+        try {
+            const snap = await db.collection('kategori').get();
+            kategoriData = [];
+            snap.forEach(doc => kategoriData.push({ id: doc.id, ...doc.data() }));
+            renderKategori();
+        } catch (err2) {
+            console.error('Gagal load kategori (fallback):', err2);
+        }
+    }
+}
+
+function renderKategori() {
+    const tbody = document.getElementById('kategoriTableBody');
+    const empty = document.getElementById('emptyKategori');
+    const count = document.getElementById('countKategori');
+
+    count.textContent = kategoriData.length + ' kategori';
+
+    if (kategoriData.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    tbody.innerHTML = kategoriData.map((k, i) => {
+        const bgColor = k.warna || '#0369A1';
+        return `<tr>
+            <td style="color:var(--text-secondary);font-size:12px;">${i + 1}</td>
+            <td style="font-size:24px;text-align:center;">${k.icon || '📦'}</td>
+            <td style="font-weight:600;">${escapeHtml(k.nama)}</td>
+            <td><span style="display:inline-block;width:24px;height:24px;border-radius:4px;background:${bgColor};border:2px solid var(--border);vertical-align:middle;"></span></td>
+            <td class="text-center"><div class="aksi-group">
+                <button class="btn btn-sm btn-warning" onclick="openEditKategori('${k.id}')" title="Edit">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="hapusKategori('${k.id}')" title="Hapus">🗑</button>
+            </div></td>
+        </tr>`;
+    }).join('');
+}
+
+// ==========================================================
+// TAMBAH KATEGORI
+// ==========================================================
+async function tambahKategori(e) {
+    e.preventDefault();
+    const nama = document.getElementById('inputNamaKategori').value.trim();
+    if (!nama) { showNotif('error', 'Nama kategori tidak boleh kosong!'); return false; }
+    const icon = document.getElementById('inputIconKategori').value;
+    const warna = document.getElementById('inputWarnaKategori').value;
+    const urutan = kategoriData.length + 1;
+
+    try {
+        // Cek duplikat
+        if (kategoriData.some(k => k.nama.toLowerCase() === nama.toLowerCase())) {
+            showNotif('error', 'Kategori "' + nama + '" sudah ada!');
+            return false;
+        }
+
+        await db.collection('kategori').add({
+            nama: nama,
+            icon: icon,
+            warna: warna,
+            urutan: urutan
+        });
+        document.getElementById('inputNamaKategori').value = '';
+        showNotif('success', '✓ Kategori "' + nama + '" berhasil ditambahkan!');
+    } catch (error) {
+        showNotif('error', 'Gagal: ' + error.message);
+    }
+    return false;
+}
+
+// ==========================================================
+// EDIT KATEGORI
+// ==========================================================
+function openEditKategori(id) {
+    const k = kategoriData.find(x => x.id === id);
+    if (!k) return;
+    document.getElementById('editKategoriId').value = id;
+    document.getElementById('editNamaKategori').value = k.nama;
+    document.getElementById('editIconKategori').value = k.icon || '📦';
+    document.getElementById('editWarnaKategori').value = k.warna || '#0369A1';
+    document.getElementById('modalEditKategori').classList.add('open');
+}
+
+function closeEditKategori() {
+    document.getElementById('modalEditKategori').classList.remove('open');
+}
+
+async function simpanEditKategori(e) {
+    e.preventDefault();
+    const id = document.getElementById('editKategoriId').value;
+    const nama = document.getElementById('editNamaKategori').value.trim();
+    const icon = document.getElementById('editIconKategori').value;
+    const warna = document.getElementById('editWarnaKategori').value;
+
+    if (!nama) { showNotif('error', 'Nama tidak boleh kosong!'); return false; }
+
+    try {
+        await db.collection('kategori').doc(id).update({ nama, icon, warna });
+        closeEditKategori();
+        showNotif('success', '✓ Kategori "' + nama + '" berhasil diperbarui!');
+    } catch (error) {
+        showNotif('error', 'Gagal: ' + error.message);
+    }
+    return false;
+}
+
+// ==========================================================
+// HAPUS KATEGORI
+// ==========================================================
+function hapusKategori(id) {
+    const k = kategoriData.find(x => x.id === id);
+    if (!k) return;
+    showConfirm('Hapus kategori "' + escapeHtml(k.nama) + '"?', async () => {
+        try {
+            await db.collection('kategori').doc(id).delete();
+            showNotif('success', '✓ Kategori "' + k.nama + '" berhasil dihapus!');
+        } catch (error) {
+            showNotif('error', 'Gagal: ' + error.message);
+        }
+    });
+}
+
+// ==========================================================
+// LOAD TOKO
+// ==========================================================
+async function loadToko() {
+    try {
+        const doc = await db.collection('pengaturan').doc('umum').get();
+        if (doc.exists) {
+            tokoData = doc.data();
+            document.getElementById('inputNamaToko').value = tokoData.nama_toko || '';
+            document.getElementById('inputAlamatToko').value = tokoData.alamat || '';
+            document.getElementById('inputTelpToko').value = tokoData.telp || '';
+        }
+    } catch (error) {
+        console.error('Gagal load toko:', error);
+    }
+}
+
+async function simpanToko(e) {
+    e.preventDefault();
+    const nama = document.getElementById('inputNamaToko').value.trim();
+    const alamat = document.getElementById('inputAlamatToko').value.trim();
+    const telp = document.getElementById('inputTelpToko').value.trim();
+
+    if (!nama) { showNotif('error', 'Nama toko tidak boleh kosong!'); return false; }
+
+    try {
+        await db.collection('pengaturan').doc('umum').set({
+            nama_toko: nama,
+            alamat: alamat,
+            telp: telp
+        }, { merge: true });
+        showNotif('success', '✓ Info toko berhasil disimpan!');
+    } catch (error) {
+        showNotif('error', 'Gagal: ' + error.message);
+    }
+    return false;
+}
+
+// ==========================================================
+// TEMA
+// ==========================================================
+function pilihTema(tema, el) {
+    document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.documentElement.setAttribute('data-theme', tema);
+    localStorage.setItem('theme', tema);
+    document.getElementById('themeToggle').textContent = tema === 'dark' ? '☀️' : '🌙';
+}
+
+// ==========================================================
+// SISTEM INFO
+// ==========================================================
+async function loadSistemInfo() {
+    const dot = document.getElementById('firebaseDot');
+    const text = document.getElementById('firebaseText');
+
+    // Coba test koneksi ke Firestore
+    try {
+        await db.collection('_connection_test_').doc('_test_').set({
+            _timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await db.collection('_connection_test_').doc('_test_').delete();
+        dot.className = 'status-dot online';
+        text.textContent = 'Terhubung ✅';
+    } catch (e) {
+        // Fallback: coba baca saja
+        try {
+            await db.collection('_connection_test_').limit(1).get();
+            dot.className = 'status-dot online';
+            text.textContent = 'Terhubung (read-only) ✅';
+        } catch (e2) {
+            dot.className = 'status-dot offline';
+            text.textContent = 'Gagal terhubung ❌ - ' + (e2.message || 'unknown error');
+        }
+    }
+
+    document.getElementById('projectId').textContent = firebaseConfig.projectId || '-';
+    document.getElementById('dbUrl').textContent = firebaseConfig.databaseURL || '(Firestore)';
+    document.getElementById('browserInfo').textContent = navigator.userAgent;
+    document.getElementById('serverTime').textContent = new Date().toLocaleString('id-ID');
+
+    // Set tema card active
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    document.querySelectorAll('.theme-card').forEach(c => {
+        if (c.dataset.theme === currentTheme) c.classList.add('active');
+    });
+}
+
+// ==========================================================
+// SEED DEFAULT DATA
+// ==========================================================
+async function seedDefaultData() {
+    showConfirm('Tambahkan data default (kategori & contoh produk)?', async () => {
+        try {
+            // Cek apakah sudah ada kategori
+            const snap = await db.collection('kategori').limit(1).get();
+            if (!snap.empty) {
+                showNotif('error', 'Data kategori sudah ada! Hapus dulu jika ingin mengulang.');
+                return;
+            }
+
+            const defaultKategori = [
+                { nama: 'Baju', icon: '👕', warna: '#0369A1', urutan: 1 },
+                { nama: 'Celana', icon: '👖', warna: '#92400E', urutan: 2 },
+                { nama: 'Aksesoris', icon: '🧢', warna: '#6D28D9', urutan: 3 },
+                { nama: 'Lainnya', icon: '📦', warna: '#78716C', urutan: 4 }
+            ];
+
+            const batch = db.batch();
+            defaultKategori.forEach(k => {
+                batch.set(db.collection('kategori').doc(), k);
+            });
+            await batch.commit();
+
+            showNotif('success', '✓ Data default berhasil ditambahkan!');
+        } catch (error) {
+            showNotif('error', 'Gagal seed data: ' + error.message);
+        }
+    });
+}
+
+// ==========================================================
+// CONFIRM DIALOG
+// ==========================================================
+function showConfirm(msg, onConfirm) {
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmSub').textContent = 'Tindakan ini tidak bisa dibatalkan.';
+    confirmCallback = onConfirm;
+    document.getElementById('confirmDialog').classList.add('open');
+}
+
+function closeConfirm() {
+    document.getElementById('confirmDialog').classList.remove('open');
+    confirmCallback = null;
+}
+
+document.getElementById('confirmBtn').addEventListener('click', function() {
+    if (confirmCallback) { const cb = confirmCallback; closeConfirm(); cb(); }
+});
+document.getElementById('confirmDialog').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirm();
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeConfirm(); closeEditKategori(); }
+});
+
+// ==========================================================
+// MODAL KLIK LUAR
+// ==========================================================
+document.getElementById('modalEditKategori').addEventListener('click', function(e) {
+    if (e.target === this) closeEditKategori();
+});
+
+// ==========================================================
+// UTILITY
+// ==========================================================
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// ==========================================================
+// DARK MODE
+// ==========================================================
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.getElementById('themeToggle').textContent = isDark ? '🌙' : '☀️';
+    // Update theme cards
+    document.querySelectorAll('.theme-card').forEach(c => {
+        c.classList.toggle('active', c.dataset.theme === newTheme);
+    });
+}
+
+(function initTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeToggle').textContent = '☀️';
+    }
+})();
+
+// ==========================================================
+// CLOCK
+// ==========================================================
+function updateClock() {
+    document.getElementById('clock').textContent = new Date().toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ==========================================================
+// LISTENER REAL-TIME UNTUK KATEGORI
+// ==========================================================
+let unsubscribeKategori = null;
+
+function listenKategori() {
+    if (unsubscribeKategori) unsubscribeKategori();
+    unsubscribeKategori = db.collection('kategori').orderBy('urutan', 'asc')
+        .onSnapshot(snapshot => {
+            kategoriData = [];
+            snapshot.forEach(doc => kategoriData.push({ id: doc.id, ...doc.data() }));
+            renderKategori();
+        }, error => {
+            // Fallback if index error
+            if (error.code === 'failed-precondition') {
+                db.collection('kategori').get().then(snap => {
+                    kategoriData = [];
+                    snap.forEach(doc => kategoriData.push({ id: doc.id, ...doc.data() }));
+                    renderKategori();
+                });
+            } else {
+                console.error('Listener kategori error:', error);
+            }
+        });
+}
+
+// ==========================================================
+// INIT
+// ==========================================================
+document.addEventListener('DOMContentLoaded', function() {
+    listenKategori();
+    loadToko();
+    loadSistemInfo();
+});
+
+window.addEventListener('beforeunload', function() {
+    if (unsubscribeKategori) unsubscribeKategori();
+});
+</script>
+</body>
+</html>

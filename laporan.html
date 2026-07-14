@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <style>
+        /* CONFIRM DIALOG */
+        #confirmDialog .modal-box { text-align: center; max-width: 360px; }
+        #confirmDialog .confirm-icon { font-size: 36px; margin-bottom: 8px; }
+        #confirmDialog .confirm-msg { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        #confirmDialog .confirm-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #F5F3F0; --surface: #FFFFFF; --text: #1E293B; --text-secondary: #64748B;
+            --accent: #F59E0B; --secondary: #6366F1; --success: #10B981; --danger: #EF4444;
+            --border: #1E293B; --shadow: 6px 6px 0px #1E293B; --shadow-sm: 3px 3px 0px #1E293B;
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
+            --border-light: #E2E8F0; --row-hover: #FFF8E7;
+            --color-bayar: #065F46; --color-kembali: #B45309;
+        }
+        [data-theme="dark"] {
+            --bg: #0F172A; --surface: #1E293B; --text: #F1F5F9; --text-secondary: #94A3B8;
+            --accent: #FBBF24; --secondary: #818CF8; --success: #34D399; --danger: #F87171;
+            --border: #334155; --shadow: 6px 6px 0px #020617; --shadow-sm: 3px 3px 0px #020617;
+            --border-light: #334155; --row-hover: #1E293B;
+            --color-bayar: #6EE7B7; --color-kembali: #FBBF24;
+        }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; transition: background 0.3s ease, color 0.3s ease; }
+
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; background: var(--surface);
+            border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 100;
+            flex-wrap: wrap; gap: 12px;
+        }
+        .topbar-brand { display: flex; align-items: center; gap: 12px; }
+        .topbar-brand .logo-mark { width: 40px; height: 40px; background: var(--accent); border: 2px solid var(--border); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .topbar-brand h1 { font-size: 18px; font-weight: 800; }
+        .topbar-brand .sub { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+        .topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .topbar-right .nav-link { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; padding: 6px 14px; border: 2px solid transparent; transition: all 0.15s ease; }
+        .topbar-right .nav-link:hover { color: var(--text); border-color: var(--border); background: var(--bg); }
+        .topbar-right .nav-link.active { color: var(--text); background: var(--bg); border-color: var(--border); box-shadow: var(--shadow-sm); }
+        .btn-mode {
+            background: none; border: 2px solid var(--border); cursor: pointer;
+            padding: 6px 8px; font-size: 14px; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease;
+            background: var(--surface); box-shadow: var(--shadow-sm);
+        }
+        .btn-mode:hover { transform: translate(-2px, -2px); }
+        .topbar-clock { font-size: 11px; font-weight: 600; color: var(--text-secondary); padding: 6px 12px; background: var(--bg); border: 2px solid var(--border); box-shadow: var(--shadow-sm); white-space: nowrap; }
+
+        .app-main { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        .card { background: var(--surface); border: 2px solid var(--border); box-shadow: var(--shadow); margin-bottom: 20px; }
+        .card-header { padding: 14px 18px; font-weight: 700; font-size: 14px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 18px; }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .stat-card { background: var(--surface); border: 2px solid var(--border); padding: 18px 20px; box-shadow: var(--shadow); }
+        .stat-card .stat-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .stat-value { font-size: 24px; font-weight: 800; margin-top: 2px; }
+        .stat-card .stat-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+        .stat-card.stat-total { border-left: 6px solid var(--accent); }
+        .stat-card.stat-count { border-left: 6px solid var(--secondary); }
+        .stat-card.stat-rata { border-left: 6px solid var(--success); }
+        .stat-card.stat-kembali { border-left: 6px solid var(--danger); }
+
+        /* FILTER */
+        .filter-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-group label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
+        .filter-group input { padding: 9px 12px; border: 2px solid var(--border); font-size: 13px; font-family: var(--font); outline: none; min-width: 140px; transition: box-shadow 0.15s ease; }
+        .filter-group input:focus { box-shadow: 3px 3px 0px var(--border); }
+
+        .aksi-group {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .aksi-group .btn-sm {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            justify-content: center;
+            gap: 0;
+        }
+        .btn { padding: 9px 18px; border: 2px solid var(--border); font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.12s ease; }
+        .btn-primary { background: var(--border); color: #fff; }
+        .btn-primary:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-secondary { background: var(--bg); color: var(--text); }
+        .btn-secondary:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-sm { padding: 6px 12px; font-size: 11px; }
+        .btn-print { background: var(--secondary); color: #fff; border-color: var(--border); }
+        .btn-print:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-detail { background: var(--bg); color: var(--text); }
+        .btn-detail.active { background: var(--border); color: #fff; }
+        .btn-edit { background: var(--accent); color: var(--text); border-color: var(--border); }
+        .btn-edit:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--border); }
+        .btn-danger:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--border); }
+        .btn-success:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px var(--border); }
+
+        /* TABLE */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead th { background: var(--bg); padding: 10px 12px; text-align: left; font-weight: 700; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid var(--border); }
+        tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+        tbody tr:hover td { background: var(--row-hover); }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .faktur-link { color: var(--text); font-weight: 700; text-decoration: none; }
+        .faktur-link:hover { text-decoration: underline; }
+        .badge-item-count { display: inline-flex; align-items: center; justify-content: center; background: var(--bg); border: 2px solid var(--border); font-size: 10px; font-weight: 800; min-width: 22px; height: 22px; padding: 0 4px; }
+
+        .detail-row { display: none; }
+        .detail-row.open { display: table-row; }
+        .detail-row td { padding: 0; }
+        .detail-inner { padding: 12px 12px 12px 48px; border-bottom: 1px solid var(--border); background: var(--bg); }
+        .detail-inner table { font-size: 12px; max-width: 500px; }
+        .detail-inner th { background: transparent; padding: 4px 8px; font-size: 10px; color: var(--text-secondary); border-bottom: 1px dashed var(--border); text-transform: uppercase; }
+        .detail-inner td { padding: 4px 8px; border: none; background: transparent !important; }
+
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-secondary); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+        .loading { text-align: center; padding: 40px; color: var(--text-secondary); font-weight: 500; }
+
+        /* MODAL EDIT */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: var(--surface); border: 2px solid var(--border); box-shadow: var(--shadow); padding: 24px; width: 90%; max-width: 420px; }
+        .modal-box h3 { font-size: 17px; margin-bottom: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
+        .modal-readonly { padding: 10px 12px; background: var(--bg); border: 2px solid var(--border); font-size: 14px; font-weight: 700; }
+        .harga-wrap { display: flex; align-items: center; border: 2px solid var(--border); overflow: hidden; }
+        .harga-wrap:focus-within { box-shadow: 3px 3px 0px var(--border); }
+        .harga-wrap .rp-prefix { padding: 10px 12px; background: var(--bg); font-weight: 700; font-size: 14px; color: var(--text-secondary); border-right: 2px solid var(--border); }
+        .harga-wrap input { flex: 1; padding: 10px 12px; border: none; font-size: 16px; font-weight: 700; font-family: var(--font); outline: none; }
+        .kembali-edit { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin-top: 8px; background: #ECFDF5; border: 2px solid var(--success); font-size: 14px; }
+        .kembali-edit .label { color: #065F46; font-weight: 700; }
+        .kembali-edit .value { font-size: 20px; font-weight: 800; color: #065F46; }
+        .kembali-edit.minus { background: #FEF2F2; border-color: var(--danger); }
+        .kembali-edit.minus .label { color: #991B1B; }
+        .kembali-edit.minus .value { color: #991B1B; }
+
+        [data-theme="dark"] .kembali-edit { background: #064E3B; }
+        [data-theme="dark"] .kembali-edit .label,
+        [data-theme="dark"] .kembali-edit .value { color: #6EE7B7; }
+        [data-theme="dark"] .kembali-edit.minus { background: #7F1D1D; }
+        [data-theme="dark"] .kembali-edit.minus .label,
+        [data-theme="dark"] .kembali-edit.minus .value { color: #FCA5A5; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+
+        @media (max-width: 992px) {
+            th:nth-child(8), td:nth-child(8) { width: 100px; }
+            .aksi-group .btn-sm { width: 30px; height: 30px; font-size: 10px; }
+            .aksi-group { gap: 4px; }
+        }
+        @media (max-width: 768px) {
+            .topbar { flex-direction: column; align-items: flex-start; }
+            .topbar-right { width: 100%; justify-content: flex-start; }
+            .app-main { padding: 12px; }
+            .filter-form { flex-direction: column; }
+            .filter-group input { width: 100%; }
+            .detail-inner { padding-left: 12px; }
+            th:nth-child(8), td:nth-child(8) { width: 80px; }
+            .aksi-group .btn-sm { width: 26px; height: 26px; font-size: 9px; }
+            .aksi-group { gap: 3px; }
+        }
+        @media (max-width: 640px) {
+            .topbar-right .nav-link {
+                padding: 10px 16px;
+                font-size: 14px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+            .topbar-clock {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+            .btn { padding: 12px 18px; min-height: 44px; font-size: 13px; }
+            .btn-sm { padding: 8px 14px; min-height: 38px; font-size: 12px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .stat-value { font-size: 20px; }
+        }
+        @media (max-width: 480px) {
+            .topbar { padding: 10px 12px; gap: 6px; }
+            .topbar-brand .logo-mark { width: 34px; height: 34px; font-size: 16px; }
+            .topbar-brand h1 { font-size: 16px; }
+            .topbar-right { gap: 4px; }
+            .topbar-right .nav-link {
+                flex: 1;
+                text-align: center;
+                justify-content: center;
+                font-size: 11px;
+                padding: 10px 4px;
+                min-height: 38px;
+            }
+            .topbar-clock {
+                font-size: 10px;
+                padding: 8px 8px;
+                width: 100%;
+                text-align: center;
+            }
+            .stats-grid { grid-template-columns: 1fr; gap: 8px; }
+            .app-main { padding: 8px; }
+            .card-body { padding: 12px; }
+            .card-header { padding: 12px 14px; }
+            .stat-card { padding: 12px 14px; }
+            .stat-card .stat-value { font-size: 18px; }
+            .aksi-group .btn-sm { width: 30px; height: 30px; font-size: 11px; }
+            .aksi-group { gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-brand">
+        <div class="logo-mark">📊</div>
+        <div><h1>LAPORAN</h1></div>
+    </div>
+    <div class="topbar-right">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="kasir.html" class="nav-link">Kasir</a>
+        <a href="laporan.html" class="nav-link active">Laporan</a>
+        <a href="data_produk.html" class="nav-link">Produk</a>
+        <a href="pengaturan.html" class="nav-link">Pengaturan</a>
+        <button class="btn-mode" id="themeToggle" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
+        <span class="topbar-clock" id="clock">—</span>
+    </div>
+</header>
+
+<div class="app-main">
+
+    <div id="loadingState" class="loading"><p>⏳ Memuat data transaksi...</p></div>
+
+    <!-- Stats -->
+    <div id="statsContainer" style="display:none;">
+        <div class="stats-grid">
+            <div class="stat-card stat-count">
+                <div class="stat-label">Transaksi</div>
+                <div class="stat-value" id="statCount">0</div>
+                <div class="stat-sub" id="statPeriod">-</div>
+            </div>
+            <div class="stat-card stat-total">
+                <div class="stat-label">Penjualan</div>
+                <div class="stat-value" id="statTotal">Rp 0</div>
+                <div class="stat-sub">Pendapatan kotor</div>
+            </div>
+            <div class="stat-card stat-rata">
+                <div class="stat-label">Rata-rata</div>
+                <div class="stat-value" id="statRata">Rp 0</div>
+                <div class="stat-sub">Per transaksi</div>
+            </div>
+            <div class="stat-card stat-kembali">
+                <div class="stat-label">Kembalian</div>
+                <div class="stat-value" id="statKembali">Rp 0</div>
+                <div class="stat-sub">Kembali ke pelanggan</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card">
+        <div class="card-header">🔍 Filter</div>
+        <div class="card-body">
+            <form onsubmit="return loadData(event)" class="filter-form">
+                <div class="filter-group">
+                    <label>Dari</label>
+                    <input type="date" id="filterStart">
+                </div>
+                <div class="filter-group">
+                    <label>Sampai</label>
+                    <input type="date" id="filterEnd">
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:1px;">
+                    <button type="submit" class="btn btn-primary">🔍 Tampilkan</button>
+                    <button type="button" class="btn btn-secondary" onclick="setHariIni()">📅 Hari Ini</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Export -->
+    <div style="display:none;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;" id="exportBar">
+        <button class="btn btn-success" onclick="exportExcel()">📤 Export Excel</button>
+        <span style="font-size:12px;color:var(--text-secondary);font-weight:500;" id="exportInfo"></span>
+    </div>
+
+    <!-- Tabel -->
+    <div class="card">
+        <div class="card-header">
+            <span>📋 Transaksi</span>
+            <span style="font-size:11px;color:var(--text-secondary);font-weight:600;" id="countLabel">0 transaksi</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <div class="icon">📭</div>
+                <p>Tidak ada transaksi pada periode ini.</p>
+            </div>
+            <div class="table-wrap" id="tableContainer" style="display:none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:32px;"></th>
+                            <th>Faktur</th>
+                            <th>Tanggal</th>
+                            <th style="width:40px;">Item</th>
+                            <th class="text-right">Total</th>
+                            <th class="text-right">Bayar</th>
+                            <th class="text-right">Kembali</th>
+                            <th class="text-center" style="width:120px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transaksiBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay" id="confirmDialog">
+    <div class="modal-box">
+        <div class="confirm-icon">⚠️</div>
+        <div class="confirm-msg" id="confirmMsg">Yakin ingin menghapus?</div>
+        <div class="confirm-sub" id="confirmSub">Data yang dihapus tidak bisa dikembalikan.</div>
+        <div class="modal-actions" style="justify-content:center;">
+            <button class="btn btn-secondary" onclick="closeConfirm()">Batal</button>
+            <button class="btn btn-danger" id="confirmBtn">🗑 Hapus</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Transaksi -->
+<div class="modal-overlay" id="modalEdit">
+    <div class="modal-box">
+        <h3>✏️ Edit Transaksi</h3>
+        <form onsubmit="return simpanEdit(event)">
+            <input type="hidden" id="editId">
+
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>No. Faktur</label>
+                <div class="modal-readonly" id="editFaktur">-</div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>Total Belanja</label>
+                <div class="modal-readonly" id="editTotal">Rp 0</div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Nominal Uang (Rp)</label>
+                <div class="harga-wrap">
+                    <span class="rp-prefix">Rp</span>
+                    <input type="text" id="editBayar" oninput="editHitungKembalian()" required>
+                </div>
+            </div>
+
+            <div class="kembali-edit" id="editKembaliBox">
+                <span class="label">Kembalian</span>
+                <span class="value" id="editKembali">Rp 0</span>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEdit()">Batal</button>
+                <button type="submit" class="btn btn-primary">💾 Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let transaksiCache = [];
+
+function setHariIni() {
+    const t = new Date().toISOString().split('T')[0];
+    document.getElementById('filterStart').value = t;
+    document.getElementById('filterEnd').value = t;
+    loadData(new Event('submit'));
+}
+
+async function loadData(e) {
+    e.preventDefault();
+    const start = document.getElementById('filterStart').value;
+    const end = document.getElementById('filterEnd').value;
+    if (!start || !end) { alert('Pilih rentang tanggal!'); return false; }
+
+    const tglMulai = new Date(start); tglMulai.setHours(0,0,0,0);
+    const tglSelesai = new Date(end); tglSelesai.setHours(23,59,59,999);
+
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('statsContainer').style.display = 'none';
+    document.getElementById('tableContainer').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+
+    try {
+        // Ambil data dari tglMulai (tanpa orderBy biar gaperlu composite index)
+        const snap = await db.collection('transaksi')
+            .where('tanggal', '>=', firebase.firestore.Timestamp.fromDate(tglMulai))
+            .get();
+
+        transaksiCache = [];
+        snap.forEach(doc => {
+            const data = doc.data();
+            // Filter batas akhir di client-side
+            if (data.tanggal && data.tanggal.toDate() <= tglSelesai) {
+                transaksiCache.push({ id: doc.id, ...data });
+            }
+        });
+
+        // Urutkan DESC (terbaru di atas) di client-side
+        transaksiCache.sort((a, b) => {
+            const ta = a.tanggal ? a.tanggal.toDate().getTime() : 0;
+            const tb = b.tanggal ? b.tanggal.toDate().getTime() : 0;
+            return tb - ta;
+        });
+
+        document.getElementById('loadingState').style.display = 'none';
+        renderData();
+    } catch (error) {
+        console.error('Firestore error:', error);
+        document.getElementById('loadingState').innerHTML = '<p style="color:var(--danger);">❌ ' + error.message + '</p>';
+    }
+    return false;
+}
+
+function renderData() {
+    const start = document.getElementById('filterStart').value;
+    const end = document.getElementById('filterEnd').value;
+    document.getElementById('statPeriod').textContent = new Date(start+'T00:00:00').toLocaleDateString('id-ID') + ' — ' + new Date(end+'T00:00:00').toLocaleDateString('id-ID');
+    document.getElementById('countLabel').textContent = transaksiCache.length + ' transaksi';
+    document.getElementById('statCount').textContent = transaksiCache.length;
+
+    let total = 0, totalKembali = 0;
+    transaksiCache.forEach(t => { total += t.total_bayar || 0; totalKembali += t.kembalian || 0; });
+    document.getElementById('statTotal').textContent = 'Rp ' + rupiah(total);
+    document.getElementById('statRata').textContent = 'Rp ' + rupiah(transaksiCache.length > 0 ? Math.round(total / transaksiCache.length) : 0);
+    document.getElementById('statKembali').textContent = 'Rp ' + rupiah(totalKembali);
+    document.getElementById('statsContainer').style.display = 'block';
+    document.getElementById('exportBar').style.display = transaksiCache.length > 0 ? 'flex' : 'none';
+
+    if (transaksiCache.length === 0) {
+        document.getElementById('tableContainer').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block'; return;
+    }
+
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('tableContainer').style.display = 'block';
+    document.getElementById('transaksiBody').innerHTML = transaksiCache.map((t, i) => {
+        const items = t.items || [];
+        const did = 'detail-' + i;
+        return `<tr>
+            <td class="text-center"><button class="btn btn-sm btn-detail" onclick="toggleDetail('${did}',this)" title="Detail">▶</button></td>
+            <td><a href="cetak_struk.html?faktur=${encodeURIComponent(t.no_faktur)}" class="faktur-link" target="_blank">${escapeHtml(t.no_faktur)}</a></td>
+            <td style="font-size:12px;color:var(--text-secondary);">${formatTanggal(t.tanggal)}</td>
+            <td class="text-center"><span class="badge-item-count">${items.length}</span></td>
+            <td class="text-right" style="font-weight:700;">Rp ${rupiah(t.total_bayar)}</td>
+            <td class="text-right" style="color:var(--color-bayar);font-weight:600;">Rp ${rupiah(t.nominal_uang)}</td>
+            <td class="text-right" style="color:var(--color-kembali);font-weight:600;">Rp ${rupiah(t.kembalian)}</td>
+            <td class="text-center"><div class="aksi-group">
+                <a href="cetak_struk.html?faktur=${encodeURIComponent(t.no_faktur)}" class="btn btn-sm btn-print" target="_blank" title="Cetak Struk">🖨</a>
+                <button class="btn btn-sm btn-edit" onclick="editTransaksi('${t.id}', '${escapeHtml(t.no_faktur)}', ${t.total_bayar}, ${t.nominal_uang})" title="Edit Bayar">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="hapusTransaksi('${t.id}', '${escapeHtml(t.no_faktur)}')" title="Hapus Transaksi">🗑</button>
+            </div></td>
+        </tr>
+        <tr class="detail-row" id="${did}">
+            <td colspan="8"><div class="detail-inner">
+                <table>
+                    <thead><tr><th style="width:60%;">Barang</th><th style="width:15%;">Qty</th><th style="width:25%;" class="text-right">Subtotal</th></tr></thead>
+                    <tbody>${items.map(item => `<tr><td>${escapeHtml(item.nama_produk)}</td><td>${item.jumlah}x</td><td class="text-right">Rp ${rupiah(item.subtotal)}</td></tr>`).join('')}</tbody>
+                    <tfoot><tr><td colspan="2" style="text-align:right;font-weight:700;border-top:1px solid var(--border);padding-top:6px;">Total</td><td class="text-right" style="font-weight:800;border-top:1px solid var(--border);padding-top:6px;">Rp ${rupiah(t.total_bayar)}</td></tr></tfoot>
+                </table>
+            </div></td>
+        </tr>`;
+    }).join('');
+}
+
+function toggleDetail(id, btn) {
+    const row = document.getElementById(id);
+    if (!row) return;
+    const isOpen = row.classList.contains('open');
+    document.querySelectorAll('.detail-row.open').forEach(r => r.classList.remove('open'));
+    document.querySelectorAll('.btn-detail.active').forEach(b => { b.classList.remove('active'); b.textContent = '▶'; });
+    if (!isOpen) { row.classList.add('open'); btn.classList.add('active'); btn.textContent = '▼'; }
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// ==========================================================
+// DARK MODE
+// ==========================================================
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.getElementById('themeToggle').textContent = isDark ? '🌙' : '☀️';
+}
+
+(function initTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeToggle').textContent = '☀️';
+    }
+})();
+
+// ==========================================================
+// EDIT TRANSAKSI
+// ==========================================================
+function editTransaksi(id, faktur, totalBayar, nominalUang) {
+    document.getElementById('editId').value = id;
+    document.getElementById('editFaktur').textContent = faktur;
+    document.getElementById('editTotal').textContent = 'Rp ' + rupiah(totalBayar);
+    document.getElementById('editBayar').value = nominalUang.toLocaleString('id-ID');
+    editHitungKembalian();
+    document.getElementById('modalEdit').classList.add('open');
+}
+
+function closeEdit() {
+    document.getElementById('modalEdit').classList.remove('open');
+}
+
+function editHitungKembalian() {
+    const totalText = document.getElementById('editTotal').textContent;
+    const total = parseInt(totalText.replace(/[^0-9]/g, '')) || 0;
+    const bayar = parseInt(document.getElementById('editBayar').value.replace(/[^0-9]/g, '')) || 0;
+    const box = document.getElementById('editKembaliBox');
+    const value = document.getElementById('editKembali');
+
+    if (bayar >= total) {
+        box.className = 'kembali-edit';
+        value.textContent = 'Rp ' + rupiah(bayar - total);
+    } else if (bayar > 0) {
+        box.className = 'kembali-edit minus';
+        value.textContent = '−Rp ' + rupiah(total - bayar);
+    } else {
+        box.className = 'kembali-edit';
+        value.textContent = 'Rp 0';
+    }
+}
+
+async function simpanEdit(e) {
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    const totalText = document.getElementById('editTotal').textContent;
+    const total = parseInt(totalText.replace(/[^0-9]/g, '')) || 0;
+    const bayar = parseInt(document.getElementById('editBayar').value.replace(/[^0-9]/g, '')) || 0;
+
+    if (bayar <= 0) { alert('Nominal uang harus lebih dari 0!'); return false; }
+    if (bayar < total) {
+        alert('Uang kurang Rp ' + rupiah(total - bayar) + '! Tidak bisa disimpan.');
+        return false;
+    }
+
+    const kembalian = bayar - total;
+
+    try {
+        await db.collection('transaksi').doc(id).update({
+            nominal_uang: bayar,
+            kembalian: kembalian
+        });
+        closeEdit();
+        // Refresh data
+        loadData(new Event('submit'));
+    } catch (error) {
+        alert('Gagal menyimpan: ' + error.message);
+    }
+    return false;
+}
+
+// ==========================================================
+// HAPUS TRANSAKSI
+// ==========================================================
+function hapusTransaksi(id, faktur) {
+    showConfirm('Hapus transaksi ' + escapeHtml(faktur) + '?', async () => {
+        try {
+            await db.collection('transaksi').doc(id).delete();
+            // Refresh data
+            loadData(new Event('submit'));
+        } catch (error) {
+            alert('Gagal menghapus: ' + error.message);
+        }
+    });
+}
+
+// ==========================================================
+// CONFIRM DIALOG (gantikan confirm() browser)
+// ==========================================================
+let confirmCallback = null;
+
+function showConfirm(msg, onConfirm) {
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmSub').textContent = 'Data yang dihapus tidak bisa dikembalikan.';
+    confirmCallback = onConfirm;
+    document.getElementById('confirmDialog').classList.add('open');
+}
+
+function closeConfirm() {
+    document.getElementById('confirmDialog').classList.remove('open');
+    confirmCallback = null;
+}
+
+document.getElementById('confirmBtn').addEventListener('click', function() {
+    if (confirmCallback) {
+        const cb = confirmCallback;
+        closeConfirm();
+        cb();
+    }
+});
+
+document.getElementById('confirmDialog').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirm();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeConfirm();
+});
+
+// ==========================================================
+// EXPORT EXCEL
+// ==========================================================
+function exportExcel() {
+    if (!transaksiCache || transaksiCache.length === 0) {
+        alert('Tidak ada data untuk diexport!');
+        return;
+    }
+
+    const start = document.getElementById('filterStart').value;
+    const end = document.getElementById('filterEnd').value;
+
+    // Siapkan data rows
+    const rows = [];
+
+    // Header
+    rows.push(['No', 'No. Faktur', 'Tanggal', 'Total', 'Bayar', 'Kembalian', 'Items']);
+
+    // Data transaksi
+    transaksiCache.forEach((t, i) => {
+        const items = t.items || [];
+        const itemStr = items.map(item =>
+            item.nama_produk + ' (' + item.jumlah + 'x Rp ' + rupiah(item.harga) + ')'
+        ).join('\n');
+
+        rows.push([
+            i + 1,
+            t.no_faktur || '-',
+            formatTanggal(t.tanggal),
+            t.total_bayar || 0,
+            t.nominal_uang || 0,
+            t.kembalian || 0,
+            itemStr
+        ]);
+    });
+
+    // Row kosong
+    rows.push([]);
+
+    // Summary row
+    const totalTransaksi = transaksiCache.length;
+    const totalPenjualan = transaksiCache.reduce((s, t) => s + (t.total_bayar || 0), 0);
+    const totalKembali = transaksiCache.reduce((s, t) => s + (t.kembalian || 0), 0);
+    rows.push(['RINGKASAN', '', '', '', '', '', '']);
+    rows.push(['Total Transaksi', totalTransaksi, '', '', '', '', '']);
+    rows.push(['Total Penjualan', totalPenjualan, '', '', '', '', '']);
+    rows.push(['Total Kembalian', totalKembali, '', '', '', '', '']);
+
+    // Buat workbook
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+
+    // Lebar kolom
+    ws['!cols'] = [
+        { wch: 5 },   // No
+        { wch: 20 },  // Faktur
+        { wch: 22 },  // Tanggal
+        { wch: 14 },  // Total
+        { wch: 14 },  // Bayar
+        { wch: 14 },  // Kembali
+        { wch: 40 },  // Items
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Laporan Transaksi');
+
+    // Nama file
+    const fileDate = start ? start.replace(/-/g, '') : 'all';
+    const fileName = `Laporan_${fileDate}_${end ? end.replace(/-/g, '') : 'all'}.xlsx`;
+
+    // Download
+    XLSX.writeFile(wb, fileName);
+}
+
+// ==========================================================
+// EVENT LISTENERS
+// ==========================================================
+document.getElementById('modalEdit').addEventListener('click', function(e) {
+    if (e.target === this) closeEdit();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });
+
+function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); }
+updateClock(); setInterval(updateClock, 10000);
+document.addEventListener('DOMContentLoaded', setHariIni);
+</script>
+</body>
+</html>
